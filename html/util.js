@@ -47,3 +47,23 @@ export const dispose = (data1, data2) => {
     item.time = new Date(Number(item.time)).toISOString()
   })
 }
+
+export const deepClone = data => {
+  if (typeof data === 'object') {
+    if (Array.isArray(data)) {
+      let arr = []
+      data.forEach(item => {
+        arr.push(deepClone(item))
+      })
+      return arr
+    } else {
+      let obj = {}
+      for (const key in data) {
+        obj[key] = deepClone(data[key])
+      }
+      return obj
+    }
+  } else {
+    return data
+  }
+}

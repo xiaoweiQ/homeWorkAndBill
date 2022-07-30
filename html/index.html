@@ -18,6 +18,7 @@
   </head>
   <body>
     <div class="wrap">
+      <select class="select"></select>
       <table class="table"></table>
     </div>
     <script type="module">
@@ -64,7 +65,37 @@
         appendTitles(titles)
         appendContents(contents)
       }
+      function initSelect(data, selectClassName) {
+        let select = document.querySelector(`.${selectClassName}`)
+        data.forEach(item => {
+          let option = document.createElement('option')
+          select.appendChild(option)
+          option.innerText = item.label
+          option.value = item.value
+        })
+      }
+      function bindEvent(selectClassName, cb) {
+        let select = document.querySelector(`.${selectClassName}`)
+        select.onchange = () => {
+          let selectedIndex = select.selectedIndex
+          let selectedValue = select.options[selectedIndex].value
+          cb(selectedValue)
+        }
+      }
       initTable(copyBillData, 'table')
+      let monthList = [{ label: '全部', value: -1 }]
+      for (let i = 1; i < 13; i++) {
+        monthList.push({ label: i, value: i })
+      }
+      initSelect(monthList, 'select')
+      bindEvent('select', value => {
+        copyBillData.data = billData.data.filter(item => {
+          if (Number(value) === -1) return true
+          let timerMonth = item.time.split('-')[1]
+          return Number(timerMonth) === Number(value)
+        })
+        initTable(copyBillData, 'table')
+      })
     </script>
   </body>
 </html>

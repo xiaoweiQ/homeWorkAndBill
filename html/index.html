@@ -19,6 +19,11 @@
         border: 1px solid red;
         text-align: center;
       }
+      .form-div {
+        display: flex;
+        margin-bottom: 10px;
+        width: 200px
+      }
       button {
         display: inline-flex;
         justify-content: center;
@@ -37,8 +42,9 @@
         font-size: 14px;
         border-radius: 4px;
       }
-      body {
-        overflow: hidden;
+      label {
+        display: block;
+        min-width: 100px;
       }
     </style>
   </head>
@@ -49,11 +55,33 @@
       <div class="modal-wrap">
         <div class="modal">
           <div class="modal_header">
-            <div class="modal_header-title"></div>
+            <div class="modal_header-title">添加账单</div>
             <div class="modal_header-close">x</div>
           </div>
-          <div class="modal_content"></div>
-          <div class="modal_footer"></div>
+          <div class="modal_content">
+            <form class="bill-form">
+              <div class="form-div">
+                <label>账单类型</label>
+                <select class="modal-content_bill-type"></select>
+              </div>
+              <div class="form-div">
+                <label>账单时间</label>
+                <select class="modal-content_bill-time"></select>
+              </div>
+              <div class="form-div">
+                <label>账单分类</label>
+                <select class="modal-content_bill-category"></select>
+              </div>
+              <div class="form-div">
+                <label>账单金额</label>
+                <input type="text" class="modal-content_bill-amount"></input>
+              </div>
+            </form>
+          </div>
+          <div class="modal_footer">
+            <button class="add-bill-confirm">确定</button>
+            <button class="add-bill-cancel">取消</button>
+          </div>
         </div>
         <div class="overlay"></div>
       </div>
@@ -142,16 +170,7 @@
       })
       const initBillModal = () => {
         let modalWrap = document.querySelector('.modal-wrap')
-        let modalTitle = document.querySelector('.modal_header-title')
-        modalTitle.innerText = '添加账单'
-        let modalFooter = document.querySelector('.modal_footer')
-        let confirmBtn = document.createElement('button')
-        confirmBtn.innerText = '确定'
-        let cancelBtn = document.createElement('button')
-        cancelBtn.setAttribute('class', 'cancelBtn')
-        cancelBtn.innerText = '取消'
-        modalFooter.appendChild(confirmBtn)
-        modalFooter.appendChild(cancelBtn)
+        let confirmBtn = document.querySelector('.add-bill-confirm')
         // 点击确认后添加元素
         confirmBtn.onclick = (e) => {
           console.log(e)
@@ -163,7 +182,7 @@
         }
         // 绑定modal中的关闭弹框事件
         bindEvent('modal_header-close', 'onclick', closeModal)
-        bindEvent('cancelBtn', 'onclick', closeModal)
+        bindEvent('add-bill-cancel', 'onclick', closeModal)
         bindEvent('overlay', 'onclick', closeModal)
       }
       initBillModal()
@@ -182,21 +201,8 @@
             value: item.id
           }
         })
-        let billAmount = ''
-        let billTypeSelect = document.createElement('select')
-        billTypeSelect.setAttribute('class', 'modal-content_bill-type')
-        form.appendChild(billTypeSelect)
         initSelect('modal-content_bill-type', billTypeList)
-
-        let billCategorySelect = document.createElement('select')
-        billCategorySelect.setAttribute('class', 'modal-content_bill-category')
-        form.appendChild(billCategorySelect)
         initSelect('modal-content_bill-category', billCategoryList)
-
-        let billAmountSelect = document.createElement('input')
-        billAmountSelect.setAttribute('class', 'modal-content_bill-amount')
-        billAmountSelect.setAttribute('type', 'number')
-        form.appendChild(billAmountSelect)
       }
       addBillModalContent()
     </script>

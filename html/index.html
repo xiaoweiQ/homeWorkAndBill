@@ -74,9 +74,9 @@
           option.value = item.value
         })
       }
-      function bindEvent(selectClassName, cb) {
+      function bindEvent(selectClassName, eventName, cb) {
         let select = document.querySelector(`.${selectClassName}`)
-        select.onchange = () => {
+        select[eventName] = () => {
           let selectedIndex = select.selectedIndex
           let selectedValue = select.options[selectedIndex].value
           cb(selectedValue)
@@ -88,7 +88,7 @@
         monthList.push({ label: i, value: i })
       }
       initSelect(monthList, 'select')
-      bindEvent('select', value => {
+      bindEvent('select', 'onchange', value => {
         copyBillData.data = billData.data.filter(item => {
           if (Number(value) === -1) return true
           let timerMonth = item.time.split('-')[1]

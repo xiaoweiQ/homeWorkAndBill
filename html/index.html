@@ -46,6 +46,11 @@
         display: block;
         min-width: 100px;
       }
+      .sum {
+        display: flex;
+        width: 520px;
+        justify-content: space-between
+      }
     </style>
   </head>
   <body>
@@ -86,6 +91,7 @@
         <div class="overlay"></div>
       </div>
       <table class="table"></table>
+      <div class="sum"></div>
     </div>
     <script type="module">
       import { txtToJson, dispose, deepClone, generateTimerList } from './util.js'
@@ -146,7 +152,49 @@
           cb(e, ele)
         }
       }
+      function getSum(type) {
+        let sum = 0
+        switch (type) {
+          case 0:
+            return copyBillData.data
+                      .filter(item => item.type === '支出')
+                      .map(item => Number(item.amount))
+                      .reduce((prev, current) => prev + current, 0)
+          case 1:
+            return copyBillData.data
+                      .filter(item => item.type === '收入')
+                      .map(item => Number(item.amount))
+                      .reduce((prev, current) => prev + current, 0)
+          default:
+            break;
+        }
+      }
+      function renderSum() {
+        // 移除dom
+        let sumDiv = document.querySelector('.sum')
+        if (sumDiv) {
+          let parent = sumDiv.parentElement
+          parent.removeChild(sumDiv)
+        }
+        let wrap = document.querySelector('.wrap')
+        let newSumDiv = document.createElement('div')
+        newSumDiv.setAttribute('class', 'sum')
+        // 设置收入金额dom
+        let income = document.createElement('div')
+        income.style.color = 'green'
+        income.innerText = '收入金额：' + getSum(1)
+        // 设置支持金额dom
+        let spending = document.createElement('spending')
+        spending.style.color = 'red'
+        spending.innerText = '支出金额：' + getSum(0)
+        // 添加dom到根结点
+        wrap.appendChild(newSumDiv)
+        newSumDiv.appendChild(income)
+        newSumDiv.appendChild(spending)
+      }
       initTable(copyBillData, 'table')
+      renderSum()
+
       let monthList = [{ label: '全部', value: -1 }]
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
@@ -161,6 +209,7 @@
           return Number(timerMonth) === Number(selectedValue)
         })
         initTable(copyBillData, 'table')
+        renderSum()
       })
       bindEvent('addBill', 'onclick', (e, ele) => {
         let modalWrap = document.querySelector('.modal-wrap')

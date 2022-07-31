@@ -67,3 +67,21 @@ export const deepClone = data => {
     return data
   }
 }
+
+export const generateTimerList = () => {
+  let dates = []
+  for (let i = 0; i < 10; i++) {
+    let year = 2020 + i
+    let yearInfo = { children: [], value: year }
+    for (let month = 1; month <= 12; month++) {
+      let monthInfo = { children: [], value: month }
+      yearInfo.children.push(monthInfo)
+      let days = new Date(year, month, 0).getDate()
+      for (let day = 1; day <= days; day++) {
+        monthInfo.children.push({ value: day })
+      }
+    }
+    dates.push(yearInfo)
+  }
+  return dates
+}

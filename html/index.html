@@ -7,22 +7,60 @@
     <title>Document</title>
     <script src="../bill.js"></script>
     <script src="../categories.js"></script>
+    <link rel="stylesheet" href="./modal.css" />
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
       table tr th,
       table tr td {
         min-width: 100px;
         border: 1px solid red;
         text-align: center;
       }
+      button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        height: 32px;
+        padding: 8px 15px;
+        margin: 2px;
+        cursor: pointer;
+        color: #fff;
+        text-align: center;
+        outline: none;
+        font-weight: 500;
+        user-select: none;
+        background-color: #409eff;
+        border: none;
+        font-size: 14px;
+        border-radius: 4px;
+      }
+      body {
+        overflow: hidden;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
       <select class="select"></select>
+      <button class="addBill">添加账单</button>
+      <div class="modal-wrap">
+        <div class="modal">
+          <div class="modal_header">
+            <div class="modal_header-title"></div>
+            <div class="modal_header-close">x</div>
+          </div>
+          <div class="modal_content"></div>
+          <div class="modal_footer"></div>
+        </div>
+        <div class="overlay"></div>
+      </div>
       <table class="table"></table>
     </div>
     <script type="module">
-      import { txtToJson, dispose, deepClone } from './util.js'
+      import { txtToJson, dispose, deepClone, generateTimerList } from './util.js'
       let billData = txtToJson(billText)
       let categoriesData = txtToJson(categoriesText)
       dispose(billData, categoriesData)
@@ -65,7 +103,7 @@
         appendTitles(titles)
         appendContents(contents)
       }
-      function initSelect(data, selectClassName) {
+      function initSelect(selectClassName, data) {
         let select = document.querySelector(`.${selectClassName}`)
         data.forEach(item => {
           let option = document.createElement('option')
@@ -74,12 +112,10 @@
           option.value = item.value
         })
       }
-      function bindEvent(selectClassName, eventName, cb) {
-        let select = document.querySelector(`.${selectClassName}`)
-        select[eventName] = () => {
-          let selectedIndex = select.selectedIndex
-          let selectedValue = select.options[selectedIndex].value
-          cb(selectedValue)
+      function bindEvent(className, eventName, cb) {
+        let ele = document.querySelector(`.${className}`)
+        ele[eventName] = e => {
+          cb(e, ele)
         }
       }
       initTable(copyBillData, 'table')
@@ -87,15 +123,82 @@
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
       }
-      initSelect(monthList, 'select')
-      bindEvent('select', 'onchange', value => {
+      initSelect('select', monthList)
+      bindEvent('select', 'onchange', (e, ele) => {
+        let selectedIndex = ele.selectedIndex
+        let selectedValue = ele.options[selectedIndex].value
         copyBillData.data = billData.data.filter(item => {
-          if (Number(value) === -1) return true
+          if (Number(selectedValue) === -1) return true
           let timerMonth = item.time.split('-')[1]
-          return Number(timerMonth) === Number(value)
+          return Number(timerMonth) === Number(selectedValue)
         })
         initTable(copyBillData, 'table')
       })
+      bindEvent('addBill', 'onclick', (e, ele) => {
+        let modalWrap = document.querySelector('.modal-wrap')
+        modalWrap.style.display = 'block'
+        let body = document.querySelector('body')
+        body.style.overflow = 'hidden'
+      })
+      const initBillModal = () => {
+        let modalWrap = document.querySelector('.modal-wrap')
+        let modalTitle = document.querySelector('.modal_header-title')
+        modalTitle.innerText = '添加账单'
+        let modalFooter = document.querySelector('.modal_footer')
+        let confirmBtn = document.createElement('button')
+        confirmBtn.innerText = '确定'
+        let cancelBtn = document.createElement('button')
+        cancelBtn.setAttribute('class', 'cancelBtn')
+        cancelBtn.innerText = '取消'
+        modalFooter.appendChild(confirmBtn)
+        modalFooter.appendChild(cancelBtn)
+        // 点击确认后添加元素
+        confirmBtn.onclick = (e) => {
+          console.log(e)
+        }
+        const closeModal = () => {
+          modalWrap.style.display = 'none'
+          let body = document.querySelector('body')
+          body.style.overflow = 'auto'
+        }
+        // 绑定modal中的关闭弹框事件
+        bindEvent('modal_header-close', 'onclick', closeModal)
+        bindEvent('cancelBtn', 'onclick', closeModal)
+        bindEvent('overlay', 'onclick', closeModal)
+      }
+      initBillModal()
+      const addBillModalContent = () => {
+        // 创建表单
+        let modalContent = document.querySelector('.modal_content')
+        let form = document.createElement('form')
+        form.setAttribute('class', 'bill-form')
+        modalContent.appendChild(form)
+        // 初始化表单数据
+        let billTypeList = [{ label: '支出', value: '0' }, { label: '收入', value: '1' }]
+        let billTime = generateTimerList()
+        let billCategoryList = categoriesData.data.map(item => {
+          return {
+            label: item.name,
+            value: item.id
+          }
+        })
+        let billAmount = ''
+        let billTypeSelect = document.createElement('select')
+        billTypeSelect.setAttribute('class', 'modal-content_bill-type')
+        form.appendChild(billTypeSelect)
+        initSelect('modal-content_bill-type', billTypeList)
+
+        let billCategorySelect = document.createElement('select')
+        billCategorySelect.setAttribute('class', 'modal-content_bill-category')
+        form.appendChild(billCategorySelect)
+        initSelect('modal-content_bill-category', billCategoryList)
+
+        let billAmountSelect = document.createElement('input')
+        billAmountSelect.setAttribute('class', 'modal-content_bill-amount')
+        billAmountSelect.setAttribute('type', 'number')
+        form.appendChild(billAmountSelect)
+      }
+      addBillModalContent()
     </script>
   </body>
 </html>

@@ -1,0 +1,89 @@
+.calendar {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  left: 0;
+  top: 30px;
+  width: 324px;
+  height: 320px;
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 101;
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
+  border: 1px solid #ececec;
+  user-select: none;
+}
+/* 头部年月 */
+.calendar .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center
+}
+.calendar .header .arrow-left,
+.calendar .header .arrow-right {
+  display: flex;
+  justify-content: space-between;
+  width: 60px;
+  cursor: pointer;
+}
+.calendar .header .arrow-month {
+  color: #1c1e21;
+}
+.calendar .header .arrow-year {
+  color: #969faf;
+}
+.calendar .current-date {
+  font-size: 24px;
+  font-weight: 500;
+  padding: 0 5px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  color: #606266;
+}
+/* 主体日期 */
+.calendar .main {
+  margin-top: 40px;
+}
+.calendar .main .week {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0px 15px 0px;
+  border-bottom: 1px solid #ececec;
+}
+.calendar .main .week span {
+  display: inline-block;
+  width: 40px;
+  font-size: 12px;
+  text-align: center;
+}
+.calendar .main .day {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0px 5px 0px 5px;
+  cursor: pointer;
+}
+.calendar .main .day span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+.calendar .main .day .day-active {
+  background-color: #409eff;
+  border-radius: 100%;
+  color: #fff;
+}
+.calendar .main .day .day-forbidden {
+  color: #a8abb2;
+}
+.calendar .main .day .day-line {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 5px 0;
+}

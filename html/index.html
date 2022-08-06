@@ -144,6 +144,7 @@
         let contents = data.data
         appendTitles(titles)
         appendContents(contents)
+        renderSum(data)
       }
       function initSelect(selectDom, data) {
         let select = document.querySelector(selectDom)
@@ -160,24 +161,18 @@
           cb(e, ele)
         }
       }
-      function getSum(type) {
+      function getSum(type, data) {
         let sum = 0
         switch (type) {
           case 0:
-            return filterBillData.data
-                      .filter(item => item.type === '支出')
-                      .map(item => Number(item.amount))
-                      .reduce((prev, current) => prev + current, 0)
+            return data.data.filter(item => item.type === '支出').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
           case 1:
-            return filterBillData.data
-                      .filter(item => item.type === '收入')
-                      .map(item => Number(item.amount))
-                      .reduce((prev, current) => prev + current, 0)
+            return data.data.filter(item => item.type === '收入').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
           default:
             break;
         }
       }
-      function renderSum() {
+      function renderSum(data) {
         // 移除dom
         let sumDiv = document.querySelector('.sum')
         if (sumDiv) {
@@ -190,18 +185,17 @@
         // 设置收入金额dom
         let income = document.createElement('div')
         income.style.color = 'green'
-        income.innerText = '收入金额：' + getSum(1)
+        income.innerText = '收入金额：' + getSum(1, data)
         // 设置支持金额dom
         let spending = document.createElement('spending')
         spending.style.color = 'red'
-        spending.innerText = '支出金额：' + getSum(0)
+        spending.innerText = '支出金额：' + getSum(0, data)
         // 添加dom到根结点
         wrap.appendChild(newSumDiv)
         newSumDiv.appendChild(income)
         newSumDiv.appendChild(spending)
       }
       initTable(filterBillData, 'table')
-      renderSum()
 
       let monthList = [{ label: '全部', value: '' }]
       for (let i = 1; i < 13; i++) {
@@ -239,7 +233,6 @@
         })
         tempData = dispose(tempData, categoriesData)
         initTable(tempData, 'table')
-        renderSum()
       }
       
       bindEvent('.monthType', 'onchange', (e, ele) => {
@@ -300,7 +293,6 @@
           billData.data.push(...filterTempList.data)
           filterBillData = deepClone(billData)
           initTable(filterBillData, 'table')
-          renderSum()
           closeModal()
         }
         const closeModal = () => {

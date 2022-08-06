@@ -202,7 +202,7 @@
         monthList.push({ label: i, value: i })
       }
       let billCategoryList = [{ label: '全部', value: '' }]
-      for (let i = 1; i < categoriesData.data.length; i++) {
+      for (let i = 0; i < categoriesData.data.length; i++) {
         let categorieInfo = categoriesData.data[i]
         billCategoryList.push({ label: categorieInfo.name, value: categorieInfo.id })
       }
@@ -268,7 +268,7 @@
           let billTimeList = billTime.value.split('-')
           let formResult = {
             type: billType.value,
-            time: billTime.value ? new Date(billTimeList[0], billTimeList[1], billTimeList[2]) : '',
+            time: billTime.value ? new Date(billTimeList[0], billTimeList[1], billTimeList[2]).valueOf() : '',
             category: billCategory.value,
             amount: billAmount.value
           }
@@ -288,10 +288,9 @@
             alert('请输入账单金额!')
             return
           }
-          let tempList = { titles: [], data: [formResult] }
-          let filterTempList = dispose(tempList, categoriesData)
-          billData.data.push(...filterTempList.data)
+          billData.data.push(formResult)
           filterBillData = deepClone(billData)
+          filterBillData = dispose(billData, categoriesData)
           initTable(filterBillData, 'table')
           closeModal()
         }

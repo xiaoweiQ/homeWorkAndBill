@@ -232,6 +232,7 @@
           return true
         })
         tempData = dispose(tempData, categoriesData)
+        tempData.data = tempData.data.sort((a, b) => a.amount - b.amount)
         initTable(tempData, 'table')
       }
       

@@ -60,6 +60,7 @@
   <body>
     <div class="wrap">
       <select class="monthType"></select>
+      <select class="billCategory"></select>
       <button class="addBill">添加账单</button>
       <div class="modal-wrap">
         <div class="modal">
@@ -105,8 +106,7 @@
       import { loadPickDate } from "./pickDate.js";
       let billData = txtToJson(billText)
       let categoriesData = txtToJson(categoriesText)
-      dispose(billData, categoriesData)
-      let copyBillData = deepClone(billData)
+      let filterBillData = dispose(billData, categoriesData)
 
       function initTable(data, tableClassName) {
         // 移除旧的table
@@ -164,12 +164,12 @@
         let sum = 0
         switch (type) {
           case 0:
-            return copyBillData.data
+            return filterBillData.data
                       .filter(item => item.type === '支出')
                       .map(item => Number(item.amount))
                       .reduce((prev, current) => prev + current, 0)
           case 1:
-            return copyBillData.data
+            return filterBillData.data
                       .filter(item => item.type === '收入')
                       .map(item => Number(item.amount))
                       .reduce((prev, current) => prev + current, 0)
@@ -200,23 +200,42 @@
         newSumDiv.appendChild(income)
         newSumDiv.appendChild(spending)
       }
-      initTable(copyBillData, 'table')
+      initTable(filterBillData, 'table')
       renderSum()
 
       let monthList = [{ label: '全部', value: -1 }]
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
       }
+      let billCategoryList = [{ label: '全部', value: -1 }]
+      for (let i = 1; i < categoriesData.data.length; i++) {
+        let categorieInfo = categoriesData.data[i]
+        billCategoryList.push({ label: categorieInfo.name, value: categorieInfo.id })
+      }
       initSelect('.monthType', monthList)
+      initSelect('.billCategory', billCategoryList)
+      
       bindEvent('.monthType', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
-        copyBillData.data = billData.data.filter(item => {
+        filterBillData.data = billData.data.filter(item => {
           if (Number(selectedValue) === -1) return true
           let timerMonth = item.time.split('-')[1]
           return Number(timerMonth) === Number(selectedValue)
         })
-        initTable(copyBillData, 'table')
+        initTable(filterBillData, 'table')
+        renderSum()
+      })
+      bindEvent('.billCategory', 'onchange', (e, ele) => {
+        let selectedIndex = ele.selectedIndex
+        let selectedValue = ele.options[selectedIndex].value
+        filterBillData.data = billData.data.filter(item => {
+          if (Number(selectedValue) === -1) return true
+          return item.category === selectedValue
+        })
+        filterBillData.titles = billData.titles
+        filterBillData = dispose(filterBillData, categoriesData)
+        initTable(filterBillData, 'table')
         renderSum()
       })
       bindEvent('.addBill', 'onclick', (e, ele) => {
@@ -261,10 +280,10 @@
             return
           }
           let tempList = { titles: [], data: [formResult] }
-          dispose(tempList, categoriesData)
-          billData.data.push(...tempList.data)
-          copyBillData = deepClone(billData)
-          initTable(copyBillData, 'table')
+          let filterTempList = dispose(tempList, categoriesData)
+          billData.data.push(...filterTempList.data)
+          filterBillData = deepClone(billData)
+          initTable(filterBillData, 'table')
           renderSum()
           closeModal()
         }

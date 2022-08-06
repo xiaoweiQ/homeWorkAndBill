@@ -17,17 +17,19 @@ export const txtToJson = txt => {
   return resultInfo
 }
 
+// 合并表格数据
 export const dispose = (data1, data2) => {
+  let resultData = deepClone(data1)
   let titleMap = {
     time: '账单时间',
     type: '账单类型',
     category: '账单分类',
     amount: '账单金额'
   }
-  for (let i = 0; i < data1.titles.length; i++) {
-    data1.titles[i] = titleMap[data1.titles[i]]
+  for (let i = 0; i < resultData.titles.length; i++) {
+    resultData.titles[i] = titleMap[resultData.titles[i]]
   }
-  data1.data.forEach(item => {
+  resultData.data.forEach(item => {
     data2.data.forEach(itemChild => {
       // 格式化账单类型和分类
       if (item.category === itemChild.id) {
@@ -46,6 +48,7 @@ export const dispose = (data1, data2) => {
     })
     item.time = new Date(Number(item.time)).toISOString()
   })
+  return resultData
 }
 
 export const deepClone = data => {

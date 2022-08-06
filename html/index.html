@@ -203,40 +203,56 @@
       initTable(filterBillData, 'table')
       renderSum()
 
-      let monthList = [{ label: '全部', value: -1 }]
+      let monthList = [{ label: '全部', value: '' }]
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
       }
-      let billCategoryList = [{ label: '全部', value: -1 }]
+      let billCategoryList = [{ label: '全部', value: '' }]
       for (let i = 1; i < categoriesData.data.length; i++) {
         let categorieInfo = categoriesData.data[i]
         billCategoryList.push({ label: categorieInfo.name, value: categorieInfo.id })
       }
       initSelect('.monthType', monthList)
       initSelect('.billCategory', billCategoryList)
+      let searchParams = {
+        month: '',
+        category: ''
+      }
+      function handleSearch(params) {
+        let tempData = deepClone(billData)
+        tempData.data = billData.data.filter(item => {
+          let timerMonth = new Date(Number(item.time)).toISOString().split('-')[1]
+          if (!params.month) {
+            if (params.category) {
+              return params.category === item.category
+            }
+          }
+          if (!params.category) {
+            if (params.month) {
+              return Number(timerMonth) === Number(params.month)
+            }
+          }
+          if (params.month && params.category) {
+            return params.category === item.category && Number(timerMonth) === Number(params.month)
+          }
+          return true
+        })
+        tempData = dispose(tempData, categoriesData)
+        initTable(tempData, 'table')
+        renderSum()
+      }
       
       bindEvent('.monthType', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
-        filterBillData.data = billData.data.filter(item => {
-          if (Number(selectedValue) === -1) return true
-          let timerMonth = item.time.split('-')[1]
-          return Number(timerMonth) === Number(selectedValue)
-        })
-        initTable(filterBillData, 'table')
-        renderSum()
+        searchParams.month = selectedValue
+        handleSearch(searchParams)
       })
       bindEvent('.billCategory', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
-        filterBillData.data = billData.data.filter(item => {
-          if (Number(selectedValue) === -1) return true
-          return item.category === selectedValue
-        })
-        filterBillData.titles = billData.titles
-        filterBillData = dispose(filterBillData, categoriesData)
-        initTable(filterBillData, 'table')
-        renderSum()
+        searchParams.category = selectedValue
+        handleSearch(searchParams)
       })
       bindEvent('.addBill', 'onclick', (e, ele) => {
         let modalWrap = document.querySelector('.modal-wrap')

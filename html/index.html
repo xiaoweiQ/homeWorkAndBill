@@ -8,6 +8,7 @@
     <script src="../bill.js"></script>
     <script src="../categories.js"></script>
     <link rel="stylesheet" href="./modal.css" />
+    <link rel="stylesheet" href="./calendar.css">
     <style>
       * {
         margin: 0;
@@ -51,11 +52,14 @@
         width: 520px;
         justify-content: space-between
       }
+      #add-bill-time_date {
+        position: relative;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <select class="select"></select>
+      <select class="monthType"></select>
       <button class="addBill">添加账单</button>
       <div class="modal-wrap">
         <div class="modal">
@@ -67,19 +71,22 @@
             <form class="bill-form">
               <div class="form-div">
                 <label>账单类型</label>
-                <select class="modal-content_bill-type"></select>
+                <select style="width: 100px" class="modal-content_bill-type"></select>
               </div>
               <div class="form-div">
                 <label>账单时间</label>
-                <select class="modal-content_bill-time"></select>
+                <div id="add-bill-time_date">
+                  <input style="width: 100px" class="modal-content_bill-time-input" type="text"></input>
+                  <div class="modal-content_bill-time"></div>
+                </div>
               </div>
               <div class="form-div">
                 <label>账单分类</label>
-                <select class="modal-content_bill-category"></select>
+                <select style="width: 100px" class="modal-content_bill-category"></select>
               </div>
               <div class="form-div">
                 <label>账单金额</label>
-                <input type="text" class="modal-content_bill-amount"></input>
+                <input style="width: 100px" type="number" class="modal-content_bill-amount"></input>
               </div>
             </form>
           </div>
@@ -94,7 +101,8 @@
       <div class="sum"></div>
     </div>
     <script type="module">
-      import { txtToJson, dispose, deepClone, generateTimerList } from './util.js'
+      import { txtToJson, dispose, deepClone, generateTimerList, findParentNode } from './util.js'
+      import { loadPickDate } from "./pickDate.js";
       let billData = txtToJson(billText)
       let categoriesData = txtToJson(categoriesText)
       dispose(billData, categoriesData)
@@ -137,8 +145,8 @@
         appendTitles(titles)
         appendContents(contents)
       }
-      function initSelect(selectClassName, data) {
-        let select = document.querySelector(`.${selectClassName}`)
+      function initSelect(selectDom, data) {
+        let select = document.querySelector(selectDom)
         data.forEach(item => {
           let option = document.createElement('option')
           select.appendChild(option)
@@ -146,8 +154,8 @@
           option.value = item.value
         })
       }
-      function bindEvent(className, eventName, cb) {
-        let ele = document.querySelector(`.${className}`)
+      function bindEvent(domName, eventName, cb) {
+        let ele = document.querySelector(domName)
         ele[eventName] = e => {
           cb(e, ele)
         }
@@ -199,8 +207,8 @@
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
       }
-      initSelect('select', monthList)
-      bindEvent('select', 'onchange', (e, ele) => {
+      initSelect('.monthType', monthList)
+      bindEvent('.monthType', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
         copyBillData.data = billData.data.filter(item => {
@@ -211,7 +219,7 @@
         initTable(copyBillData, 'table')
         renderSum()
       })
-      bindEvent('addBill', 'onclick', (e, ele) => {
+      bindEvent('.addBill', 'onclick', (e, ele) => {
         let modalWrap = document.querySelector('.modal-wrap')
         modalWrap.style.display = 'block'
         let body = document.querySelector('body')
@@ -222,7 +230,43 @@
         let confirmBtn = document.querySelector('.add-bill-confirm')
         // 点击确认后添加元素
         confirmBtn.onclick = (e) => {
-          console.log(e)
+          let addBillForm = document.querySelector('.bill-form')
+          // 获取表单的内容
+          let billType = document.querySelector('.modal-content_bill-type')
+          let billTime = document.querySelector('.modal-content_bill-time-input')
+          let billCategory = document.querySelector('.modal-content_bill-category')
+          let billAmount = document.querySelector('.modal-content_bill-amount')
+          
+          let billTimeList = billTime.value.split('-')
+          let formResult = {
+            type: billType.value,
+            time: billTime.value ? new Date(billTimeList[0], billTimeList[1], billTimeList[2]) : '',
+            category: billCategory.value,
+            amount: billAmount.value
+          }
+          if (!formResult.type) {
+            alert('请选择账单类型!')
+            return
+          }
+          if (!formResult.time) {
+            alert('请选择账单时间!')
+            return
+          }
+          if (!formResult.category) {
+            alert('请选择账单分类!')
+            return
+          }
+          if (!formResult.amount) {
+            alert('请输入账单金额!')
+            return
+          }
+          let tempList = { titles: [], data: [formResult] }
+          dispose(tempList, categoriesData)
+          billData.data.push(...tempList.data)
+          copyBillData = deepClone(billData)
+          initTable(copyBillData, 'table')
+          renderSum()
+          closeModal()
         }
         const closeModal = () => {
           modalWrap.style.display = 'none'
@@ -230,9 +274,9 @@
           body.style.overflow = 'auto'
         }
         // 绑定modal中的关闭弹框事件
-        bindEvent('modal_header-close', 'onclick', closeModal)
-        bindEvent('add-bill-cancel', 'onclick', closeModal)
-        bindEvent('overlay', 'onclick', closeModal)
+        bindEvent('.modal_header-close', 'onclick', closeModal)
+        bindEvent('.add-bill-cancel', 'onclick', closeModal)
+        bindEvent('.overlay', 'onclick', closeModal)
       }
       initBillModal()
       const addBillModalContent = () => {
@@ -243,15 +287,35 @@
         modalContent.appendChild(form)
         // 初始化表单数据
         let billTypeList = [{ label: '支出', value: '0' }, { label: '收入', value: '1' }]
-        let billTime = generateTimerList()
         let billCategoryList = categoriesData.data.map(item => {
           return {
             label: item.name,
             value: item.id
           }
         })
-        initSelect('modal-content_bill-type', billTypeList)
-        initSelect('modal-content_bill-category', billCategoryList)
+        initSelect('.modal-content_bill-type', billTypeList)
+        initSelect('.modal-content_bill-category', billCategoryList)
+
+        let billTimeInput = document.querySelector('.modal-content_bill-time-input')
+        let billTime = document.querySelector('.modal-content_bill-time')
+        billTimeInput.onclick = () => {
+          if (billTime.style.display === 'none' || billTime.style.display === '') {
+            billTime.setAttribute('style', 'display: block');
+            // 默认绑定点击事件
+            loadPickDate('.modal-content_bill-time', e => {
+              billTimeInput.value = e.value.join('-')
+              billTime.setAttribute('style', 'display: none');
+            })
+          }
+        }
+        document.onclick = (e) => {
+          let target = e.target
+          let isFindInput = findParentNode(target, billTimeInput)
+          let isFindPickDate = findParentNode(target, billTime)
+          if (!isFindInput && !isFindPickDate) {
+            billTime.setAttribute('style', 'display: none');
+          }
+        }
       }
       addBillModalContent()
     </script>

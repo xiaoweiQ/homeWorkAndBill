@@ -85,3 +85,13 @@ export const generateTimerList = () => {
   }
   return dates
 }
+
+// 递归寻找dom
+export const findParentNode = (node, searchNode) => {
+  if (searchNode === node) return true
+  if (node.parentElement) {
+    return findParentNode(node.parentElement, searchNode)
+  } else {
+    return false
+  }
+}

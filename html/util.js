@@ -46,7 +46,7 @@ export const dispose = (data1, data2) => {
         }
       }
     })
-    item.time = new Date(Number(item.time)).toISOString()
+    item.time = new Date(+item.time + 8 * 3600 * 1000).toISOString()
   })
   return resultData
 }

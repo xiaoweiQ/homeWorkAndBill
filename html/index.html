@@ -14,17 +14,7 @@
         margin: 0;
         padding: 0;
       }
-      table tr th,
-      table tr td {
-        min-width: 100px;
-        border: 1px solid red;
-        text-align: center;
-      }
-      .form-div {
-        display: flex;
-        margin-bottom: 10px;
-        width: 200px
-      }
+      
       button {
         display: inline-flex;
         justify-content: center;
@@ -43,60 +33,125 @@
         font-size: 14px;
         border-radius: 4px;
       }
+      
+      .head {
+        padding: 0 10px;
+      }
+
+      .head .head-search {
+        display: flex
+      }
+
+      .head .search-form {
+        display: flex
+      }
+
+      .head .search-form .search-form-item {
+        margin-right: 10px
+      }
+
       label {
+        display: inline-flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        flex: 0 0 auto;
+        font-size: 14px;
+        color: #606266;
+        height: 32px;
+        line-height: 32px;
+        padding: 0 12px 0 0;
+        box-sizing: border-box
+      }
+
+      .bill-form-item {
+        display: flex;
+        margin-bottom: 10px;
+        width: 200px
+      }
+
+      .bill-form-item label {
         display: block;
         min-width: 100px;
       }
+
+      .table {
+        margin-top: 10px;
+        padding: 0 10px
+      }
+
+      .table tr th,
+      .table tr td {
+        min-width: 100px;
+        border: 1px solid red;
+        text-align: center;
+      }
+
       .sum {
         display: flex;
         width: 520px;
         justify-content: space-between
       }
+
       #add-bill-time_date {
         position: relative;
       }
+
     </style>
   </head>
   <body>
     <div class="wrap">
-      <select class="monthType"></select>
-      <select class="billCategory"></select>
-      <button class="addBill">添加账单</button>
-      <div class="modal-wrap">
-        <div class="modal">
-          <div class="modal_header">
-            <div class="modal_header-title">添加账单</div>
-            <div class="modal_header-close">x</div>
-          </div>
-          <div class="modal_content">
-            <form class="bill-form">
-              <div class="form-div">
-                <label>账单类型</label>
-                <select style="width: 100px" class="modal-content_bill-type"></select>
-              </div>
-              <div class="form-div">
-                <label>账单时间</label>
-                <div id="add-bill-time_date">
-                  <input style="width: 100px" class="modal-content_bill-time-input" type="text"></input>
-                  <div class="modal-content_bill-time"></div>
-                </div>
-              </div>
-              <div class="form-div">
-                <label>账单分类</label>
-                <select style="width: 100px" class="modal-content_bill-category"></select>
-              </div>
-              <div class="form-div">
-                <label>账单金额</label>
-                <input style="width: 100px" type="number" class="modal-content_bill-amount"></input>
-              </div>
-            </form>
-          </div>
-          <div class="modal_footer">
-            <button class="add-bill-confirm">确定</button>
-            <button class="add-bill-cancel">取消</button>
-          </div>
+      <div class="head">
+        <div class="head-search">
+          <form class="search-form">
+            <div class="search-form-item">
+              <label>月份</label>
+              <select class="monthType"></select>
+            </div>
+            <div class="search-form-item">
+              <label>分类</label>
+              <select class="billCategory"></select>
+            </div>
+          </form>
+          <button class="search-btn">搜索</button>
         </div>
-        <div class="overlay"></div>
+        <button class="addBill">添加账单</button>
+        <!-- 添加账单 -->
+        <div class="modal-wrap">
+          <div class="modal">
+            <div class="modal_header">
+              <div class="modal_header-title">添加账单</div>
+              <div class="modal_header-close">x</div>
+            </div>
+            <div class="modal_content">
+              <form class="bill-form">
+                <div class="bill-form-item">
+                  <label>账单类型</label>
+                  <select style="width: 100px" class="modal-content_bill-type"></select>
+                </div>
+                <div class="bill-form-item">
+                  <label>账单时间</label>
+                  <div id="add-bill-time_date">
+                    <input style="width: 100px" class="modal-content_bill-time-input" type="text"></input>
+                    <div class="modal-content_bill-time"></div>
+                  </div>
+                </div>
+                <div class="bill-form-item">
+                  <label>账单分类</label>
+                  <select style="width: 100px" class="modal-content_bill-category"></select>
+                </div>
+                <div class="bill-form-item">
+                  <label>账单金额</label>
+                  <input style="width: 100px" type="number" class="modal-content_bill-amount"></input>
+                </div>
+              </form>
+            </div>
+            <div class="modal_footer">
+              <button class="add-bill-confirm">确定</button>
+              <button class="add-bill-cancel">取消</button>
+            </div>
+          </div>
+          <div class="overlay"></div>
+        </div>
       </div>
       <table class="table"></table>
       <div class="sum"></div>
@@ -104,11 +159,38 @@
     <script type="module">
       import { txtToJson, dispose, deepClone, generateTimerList, findParentNode } from './util.js'
       import { loadPickDate } from "./pickDate.js";
+      let searchParams = {
+        month: '',
+        category: ''
+      }
       let billData = txtToJson(billText)
       let categoriesData = txtToJson(categoriesText)
       let filterBillData = dispose(billData, categoriesData)
 
       function initTable(data, tableClassName) {
+        function renderSum(tableData) {
+          // 移除dom
+          let sumDiv = document.querySelector('.sum')
+          if (sumDiv) {
+            let parent = sumDiv.parentElement
+            parent.removeChild(sumDiv)
+          }
+          let wrap = document.querySelector('.wrap')
+          let newSumDiv = document.createElement('div')
+          newSumDiv.setAttribute('class', 'sum')
+          // 设置收入金额dom
+          let income = document.createElement('div')
+          income.style.color = 'green'
+          income.innerText = '收入金额：' + getSum(1, tableData)
+          // 设置支持金额dom
+          let spending = document.createElement('spending')
+          spending.style.color = 'red'
+          spending.innerText = '支出金额：' + getSum(0, tableData)
+          // 添加dom到根结点
+          wrap.appendChild(newSumDiv)
+          newSumDiv.appendChild(income)
+          newSumDiv.appendChild(spending)
+        }
         // 移除旧的table
         let table = document.querySelector(`.${tableClassName}`)
         if (table) {
@@ -172,31 +254,7 @@
             break;
         }
       }
-      function renderSum(data) {
-        // 移除dom
-        let sumDiv = document.querySelector('.sum')
-        if (sumDiv) {
-          let parent = sumDiv.parentElement
-          parent.removeChild(sumDiv)
-        }
-        let wrap = document.querySelector('.wrap')
-        let newSumDiv = document.createElement('div')
-        newSumDiv.setAttribute('class', 'sum')
-        // 设置收入金额dom
-        let income = document.createElement('div')
-        income.style.color = 'green'
-        income.innerText = '收入金额：' + getSum(1, data)
-        // 设置支持金额dom
-        let spending = document.createElement('spending')
-        spending.style.color = 'red'
-        spending.innerText = '支出金额：' + getSum(0, data)
-        // 添加dom到根结点
-        wrap.appendChild(newSumDiv)
-        newSumDiv.appendChild(income)
-        newSumDiv.appendChild(spending)
-      }
-      initTable(filterBillData, 'table')
-
+      
       let monthList = [{ label: '全部', value: '' }]
       for (let i = 1; i < 13; i++) {
         monthList.push({ label: i, value: i })
@@ -208,10 +266,7 @@
       }
       initSelect('.monthType', monthList)
       initSelect('.billCategory', billCategoryList)
-      let searchParams = {
-        month: '',
-        category: ''
-      }
+      
       function handleSearch(params) {
         let tempData = deepClone(billData)
         tempData.data = billData.data.filter(item => {
@@ -236,18 +291,21 @@
         initTable(tempData, 'table')
       }
       
+      handleSearch(searchParams)
       bindEvent('.monthType', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
         searchParams.month = selectedValue
-        handleSearch(searchParams)
       })
       bindEvent('.billCategory', 'onchange', (e, ele) => {
         let selectedIndex = ele.selectedIndex
         let selectedValue = ele.options[selectedIndex].value
         searchParams.category = selectedValue
+      })
+      bindEvent('.search-btn', 'onclick', () => {
         handleSearch(searchParams)
       })
+      
       bindEvent('.addBill', 'onclick', (e, ele) => {
         let modalWrap = document.querySelector('.modal-wrap')
         modalWrap.style.display = 'block'
@@ -266,10 +324,9 @@
           let billCategory = document.querySelector('.modal-content_bill-category')
           let billAmount = document.querySelector('.modal-content_bill-amount')
           
-          let billTimeList = billTime.value.split('-')
           let formResult = {
             type: billType.value,
-            time: billTime.value ? new Date(billTimeList[0], billTimeList[1], billTimeList[2]).valueOf() : '',
+            time: billTime.value ? new Date(billTime.value.replace(/-/g, '/')).valueOf() : '',
             category: billCategory.value,
             amount: billAmount.value
           }
@@ -277,7 +334,7 @@
             alert('请选择账单类型!')
             return
           }
-          if (!formResult.time) {
+            if (!formResult.time) {
             alert('请选择账单时间!')
             return
           }
@@ -290,9 +347,7 @@
             return
           }
           billData.data.push(formResult)
-          filterBillData = deepClone(billData)
-          filterBillData = dispose(billData, categoriesData)
-          initTable(filterBillData, 'table')
+          handleSearch(searchParams)
           closeModal()
         }
         const closeModal = () => {

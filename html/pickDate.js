@@ -1,7 +1,7 @@
 export const loadPickDate = (domName, cb) => {
   let calendar = `
     <div class="calendar">
-      <div class="date-timer_header">
+      <div class="calendar-date-timer_header">
         <div class="input-wrap" style="margin: 0 2px">
           <input class="date-timer_date" placeholder="please select date" />
         </div>
@@ -10,7 +10,7 @@ export const loadPickDate = (domName, cb) => {
         </div>
         <div class="date-timer_timer-wrap"></div>
       </div>
-      <div class="header">
+      <div class="calendar-header">
         <div class="arrow-left">
           <div class="arrow-left_year arrow-year"><<</div>
           <div class="arrow-left_month arrow-month"><</div>
@@ -24,7 +24,7 @@ export const loadPickDate = (domName, cb) => {
           <div class="arrow-right_year arrow-year">>></div>
         </div>
       </div>
-      <div class="main">
+      <div class="calendar-main">
         <div class="week">
           <span>Sun</span>
           <span>Mon</span>
@@ -36,7 +36,7 @@ export const loadPickDate = (domName, cb) => {
         </div>
         <div class="day"></div>
       </div>
-      <div class="footer">
+      <div class="calendar-footer">
         <button type="button" class="calendar-footer_cancel">cancel</button>
         <button type="button" class="calendar-footer_confirm primary-button">ok</button>
       </div>
@@ -53,7 +53,7 @@ export const loadPickDate = (domName, cb) => {
   // 初始化日期与时间变量
   let currentDate = new Date()
   let currentDateFormat = currentDate.toLocaleString().split(' ')[0].split('/')
-  currentDateFormat = currentDateFormat.map(item => filterDate(item)).join('-')
+  currentDateFormat = currentDateFormat.map(item => formatValue(item)).join('-')
 
   let currentTimeFormat = '12:00:00'
 
@@ -96,7 +96,7 @@ export const loadPickDate = (domName, cb) => {
 }
 
 // 不足10的补一个零
-const filterDate = date => {
+const formatValue = date => {
   if (Number(date) < 10) {
     return '0' + date
   }
@@ -150,7 +150,7 @@ function initDate(y, m, getDate) {
   let currentYearValue = y
   let currentMonthValue = m
   currentYearDiv.innerText = currentYearValue
-  currentMonthDiv.innerText = filterDate(currentMonthValue)
+  currentMonthDiv.innerText = formatValue(currentMonthValue)
 
   let currentDays = getCurrentYearAndMonthDayList(
     currentYearValue,
@@ -182,8 +182,8 @@ function initDate(y, m, getDate) {
         span.setAttribute('class', 'day-active')
         let result = [
           currentYearValue,
-          filterDate(currentMonthValue),
-          filterDate(day.value)
+          formatValue(currentMonthValue),
+          formatValue(day.value)
         ]
         getDate(result)
       }
@@ -235,6 +235,7 @@ function bindYearAndMonthEvent(getDate) {
   }
 }
 
+// 初始化时间选择器
 function initTimerPicker(domName, getTimer) {
   let timerPicker = `
     <div class="timer-pick">

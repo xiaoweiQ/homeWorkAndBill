@@ -9,75 +9,8 @@
     <script src="../categories.js"></script>
     <link rel="stylesheet" href="./modal.css" />
     <link rel="stylesheet" href="./calendar.css">
+    <link rel="stylesheet" href="./common.css">
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-      }
-      
-      button {
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-        height: 32px;
-        padding: 8px 15px;
-        margin: 2px;
-        cursor: pointer;
-        color: #606266;
-        text-align: center;
-        outline: none;
-        font-weight: 500;
-        user-select: none;
-        background-color: #fff;
-        border: #dcdfe6;
-        font-size: 14px;
-        border-radius: 4px;
-      }
-
-      button:hover {
-        color: #ffffff;
-        border-color: #79bbff;
-        background-color: #79bbff;
-        outline: none
-      }
-
-      .input-wrap {
-        display: inline-flex;
-        flex-grow: 1;
-        align-items: center;
-        justify-content: center;
-        padding: 1px 11px;
-        background-color: #ffffff;
-        background-image: none;
-        border-radius: 4px;
-        box-shadow: 0 0 0 1px #dcdfe6 inset
-      }
-
-      input {
-        width: 100%;
-        flex-grow: 1;
-        -webkit-appearance: none;
-        color: #606266;
-        font-size: inherit;
-        height: 30px;
-        line-height: 30px;
-        padding: 0;
-        outline: none;
-        border: none;
-        background: none;
-        box-sizing: border-box
-      }
-
-      input::placeholder {
-        color: #a8abb2;
-        font-size: 13px;
-      }
-
-      .primary-button {
-        background-color: #409eff;
-        color: #fff
-      }
-
       .head {
         padding: 0 10px;
       }
@@ -92,19 +25,6 @@
 
       .head .search-form .search-form-item {
         margin-right: 10px
-      }
-
-      label {
-        display: inline-flex;
-        justify-content: flex-end;
-        align-items: flex-start;
-        flex: 0 0 auto;
-        font-size: 14px;
-        color: #606266;
-        height: 32px;
-        line-height: 32px;
-        padding: 0 12px 0 0;
-        box-sizing: border-box
       }
 
       .bill-form-item {
@@ -138,10 +58,9 @@
         justify-content: space-between
       }
 
-      #add-bill-time_date {
+      .add-bill-time_date {
         position: relative;
       }
-
     </style>
   </head>
   <body>
@@ -176,7 +95,7 @@
                 </div>
                 <div class="bill-form-item">
                   <label>账单时间</label>
-                  <div id="add-bill-time_date">
+                  <div class="add-bill-time_date">
                     <div class="input-wrap">
                       <input style="width: 150px" class="modal-content_bill-time-input" type="text"></input>
                     </div>
@@ -190,7 +109,7 @@
                 <div class="bill-form-item">
                   <label>账单金额</label>
                   <div class="input-wrap">
-                    <input style="width: 150px" type="number" class="modal-content_bill-amount"></input>
+                    <input style="width: 150px" type="number" min="0" class="modal-content_bill-amount"></input>
                   </div>
                 </div>
               </form>
@@ -213,11 +132,24 @@
         month: '',
         category: ''
       }
+      // 处理数据
       let billData = txtToJson(billText)
       let categoriesData = txtToJson(categoriesText)
       let filterBillData = dispose(billData, categoriesData)
 
-      function initTable(data, tableClassName) {
+      // 初始化表格
+      function loadTable(data, tableClassName) {
+        function getSum(type, data) {
+          let sum = 0
+          switch (type) {
+            case 0:
+              return data.data.filter(item => item.type === '支出').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
+            case 1:
+              return data.data.filter(item => item.type === '收入').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
+            default:
+              break;
+          }
+        }
         function renderSum(tableData) {
           // 移除dom
           let sumDiv = document.querySelector('.sum')
@@ -247,7 +179,7 @@
           let parent = table.parentElement
           parent.removeChild(table)
         }
-        // 生成新的table标签
+        // 生成新的table
         let wrap = document.querySelector('.wrap')
         let newTable = document.createElement('table')
         newTable.setAttribute('class', 'table')
@@ -293,29 +225,36 @@
           cb(e, ele)
         }
       }
-      function getSum(type, data) {
-        let sum = 0
-        switch (type) {
-          case 0:
-            return data.data.filter(item => item.type === '支出').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
-          case 1:
-            return data.data.filter(item => item.type === '收入').map(item => Number(item.amount)).reduce((prev, current) => prev + current, 0)
-          default:
-            break;
-        }
-      }
       
-      let monthList = [{ label: '全部', value: '' }]
-      for (let i = 1; i < 13; i++) {
-        monthList.push({ label: i, value: i })
+      // 初始化搜索框
+      function initSearch() {
+        let monthList = [{ label: '全部', value: '' }]
+        for (let i = 1; i < 13; i++) {
+          monthList.push({ label: i, value: i })
+        }
+        let billCategoryList = [{ label: '全部', value: '' }]
+        for (let i = 0; i < categoriesData.data.length; i++) {
+          let categorieInfo = categoriesData.data[i]
+          billCategoryList.push({ label: categorieInfo.name, value: categorieInfo.id })
+        }
+        initSelect('.monthType', monthList)
+        initSelect('.billCategory', billCategoryList)
+
+        bindEvent('.monthType', 'onchange', (e, ele) => {
+          let selectedIndex = ele.selectedIndex
+          let selectedValue = ele.options[selectedIndex].value
+          searchParams.month = selectedValue
+        })
+        bindEvent('.billCategory', 'onchange', (e, ele) => {
+          let selectedIndex = ele.selectedIndex
+          let selectedValue = ele.options[selectedIndex].value
+          searchParams.category = selectedValue
+        })
+        bindEvent('.search-btn', 'onclick', () => {
+          handleSearch(searchParams)
+        })
       }
-      let billCategoryList = [{ label: '全部', value: '' }]
-      for (let i = 0; i < categoriesData.data.length; i++) {
-        let categorieInfo = categoriesData.data[i]
-        billCategoryList.push({ label: categorieInfo.name, value: categorieInfo.id })
-      }
-      initSelect('.monthType', monthList)
-      initSelect('.billCategory', billCategoryList)
+      initSearch()
       
       function handleSearch(params) {
         let tempData = deepClone(billData)
@@ -338,30 +277,18 @@
         })
         tempData = dispose(tempData, categoriesData)
         tempData.data = tempData.data.sort((a, b) => a.amount - b.amount)
-        initTable(tempData, 'table')
+        loadTable(tempData, 'table')
       }
-      
       handleSearch(searchParams)
-      bindEvent('.monthType', 'onchange', (e, ele) => {
-        let selectedIndex = ele.selectedIndex
-        let selectedValue = ele.options[selectedIndex].value
-        searchParams.month = selectedValue
-      })
-      bindEvent('.billCategory', 'onchange', (e, ele) => {
-        let selectedIndex = ele.selectedIndex
-        let selectedValue = ele.options[selectedIndex].value
-        searchParams.category = selectedValue
-      })
-      bindEvent('.search-btn', 'onclick', () => {
-        handleSearch(searchParams)
-      })
       
+      // 添加账单按钮触发事件
       bindEvent('.addBill', 'onclick', (e, ele) => {
         let modalWrap = document.querySelector('.modal-wrap')
         modalWrap.style.display = 'block'
         let body = document.querySelector('body')
         body.style.overflow = 'hidden'
       })
+      // 初始化”添加账单“弹框
       const initBillModal = () => {
         let modalWrap = document.querySelector('.modal-wrap')
         let confirmBtn = document.querySelector('.add-bill-confirm')
@@ -411,6 +338,8 @@
         bindEvent('.overlay', 'onclick', closeModal)
       }
       initBillModal()
+
+      // “添加账单”弹框中的内容
       const addBillModalContent = () => {
         // 创建表单
         let modalContent = document.querySelector('.modal_content')

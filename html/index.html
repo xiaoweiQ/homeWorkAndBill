@@ -23,17 +23,61 @@
         padding: 8px 15px;
         margin: 2px;
         cursor: pointer;
-        color: #fff;
+        color: #606266;
         text-align: center;
         outline: none;
         font-weight: 500;
         user-select: none;
-        background-color: #409eff;
-        border: none;
+        background-color: #fff;
+        border: #dcdfe6;
         font-size: 14px;
         border-radius: 4px;
       }
-      
+
+      button:hover {
+        color: #ffffff;
+        border-color: #79bbff;
+        background-color: #79bbff;
+        outline: none
+      }
+
+      .input-wrap {
+        display: inline-flex;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 1px 11px;
+        background-color: #ffffff;
+        background-image: none;
+        border-radius: 4px;
+        box-shadow: 0 0 0 1px #dcdfe6 inset
+      }
+
+      input {
+        width: 100%;
+        flex-grow: 1;
+        -webkit-appearance: none;
+        color: #606266;
+        font-size: inherit;
+        height: 30px;
+        line-height: 30px;
+        padding: 0;
+        outline: none;
+        border: none;
+        background: none;
+        box-sizing: border-box
+      }
+
+      input::placeholder {
+        color: #a8abb2;
+        font-size: 13px;
+      }
+
+      .primary-button {
+        background-color: #409eff;
+        color: #fff
+      }
+
       .head {
         padding: 0 10px;
       }
@@ -65,6 +109,7 @@
 
       .bill-form-item {
         display: flex;
+        align-items: center;
         margin-bottom: 10px;
         width: 200px
       }
@@ -88,6 +133,7 @@
 
       .sum {
         display: flex;
+        padding: 0 10px;
         width: 520px;
         justify-content: space-between
       }
@@ -112,9 +158,9 @@
               <select class="billCategory"></select>
             </div>
           </form>
-          <button class="search-btn">搜索</button>
+          <button class="search-btn primary-button">搜索</button>
         </div>
-        <button class="addBill">添加账单</button>
+        <button class="addBill primary-button">添加账单</button>
         <!-- 添加账单 -->
         <div class="modal-wrap">
           <div class="modal">
@@ -126,28 +172,32 @@
               <form class="bill-form">
                 <div class="bill-form-item">
                   <label>账单类型</label>
-                  <select style="width: 100px" class="modal-content_bill-type"></select>
+                  <select style="width: 150px" class="modal-content_bill-type"></select>
                 </div>
                 <div class="bill-form-item">
                   <label>账单时间</label>
                   <div id="add-bill-time_date">
-                    <input style="width: 100px" class="modal-content_bill-time-input" type="text"></input>
+                    <div class="input-wrap">
+                      <input style="width: 150px" class="modal-content_bill-time-input" type="text"></input>
+                    </div>
                     <div class="modal-content_bill-time"></div>
                   </div>
                 </div>
                 <div class="bill-form-item">
                   <label>账单分类</label>
-                  <select style="width: 100px" class="modal-content_bill-category"></select>
+                  <select style="width: 150px" class="modal-content_bill-category"></select>
                 </div>
                 <div class="bill-form-item">
                   <label>账单金额</label>
-                  <input style="width: 100px" type="number" class="modal-content_bill-amount"></input>
+                  <div class="input-wrap">
+                    <input style="width: 150px" type="number" class="modal-content_bill-amount"></input>
+                  </div>
                 </div>
               </form>
             </div>
             <div class="modal_footer">
-              <button class="add-bill-confirm">确定</button>
               <button class="add-bill-cancel">取消</button>
+              <button class="add-bill-confirm primary-button">确定</button>
             </div>
           </div>
           <div class="overlay"></div>
@@ -384,9 +434,11 @@
           if (billTime.style.display === 'none' || billTime.style.display === '') {
             billTime.setAttribute('style', 'display: block');
             // 默认绑定点击事件
-            loadPickDate('.modal-content_bill-time', e => {
-              billTimeInput.value = e.value.join('-')
+            loadPickDate('.modal-content_bill-time', dateTimeValue => {
               billTime.setAttribute('style', 'display: none');
+              if (dateTimeValue) {
+                billTimeInput.value = dateTimeValue
+              }
             })
           }
         }

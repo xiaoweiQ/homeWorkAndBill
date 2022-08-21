@@ -1,6 +1,15 @@
 export const loadPickDate = (domName, cb) => {
   let calendar = `
     <div class="calendar">
+      <div class="date-timer_header">
+        <div class="input-wrap" style="margin: 0 2px">
+          <input class="date-timer_date" placeholder="please select date" />
+        </div>
+        <div class="input-wrap" style="margin: 0 2px">
+          <input class="date-timer_timer" placeholder="please select timer" />
+        </div>
+        <div class="date-timer_timer-wrap"></div>
+      </div>
       <div class="header">
         <div class="arrow-left">
           <div class="arrow-left_year arrow-year"><<</div>
@@ -27,17 +36,74 @@ export const loadPickDate = (domName, cb) => {
         </div>
         <div class="day"></div>
       </div>
+      <div class="footer">
+        <button type="button" class="calendar-footer_cancel">cancel</button>
+        <button type="button" class="calendar-footer_confirm primary-button">ok</button>
+      </div>
     </div>
   `
   calendar = calendar.replace(/\n/g, '')
   let fatherDom = document.querySelector(domName)
   fatherDom.innerHTML = calendar
+
+  // 获取日期输入框和时间输入框
+  const dateInput = document.querySelector('.date-timer_date')
+  const timerInput = document.querySelector('.date-timer_timer')
+
+  // 初始化日期与时间变量
   let currentDate = new Date()
-  initDate(currentDate.getFullYear(), currentDate.getMonth() + 1, cb)
-  bindEvent(cb)
+  let currentDateFormat = currentDate.toLocaleString().split(' ')[0].split('/')
+  currentDateFormat = currentDateFormat.map(item => filterDate(item)).join('-')
+
+  let currentTimeFormat = '12:00:00'
+
+  // 设置回掉方法
+  const getDate = date => {
+    currentDateFormat = date.join('-')
+    dateInput.value = currentDateFormat
+  }
+
+  const getTimer = timer => {
+    currentTimeFormat = timer.join(':')
+    timerInput.value = currentTimeFormat
+  }
+
+  initDate(currentDate.getFullYear(), currentDate.getMonth() + 1, getDate)
+  bindYearAndMonthEvent(getDate)
+
+  // 点击时间选择框时触发
+  timerInput.onclick = () => {
+    const timerPick = document.querySelector('.timer-pick')
+    if (!timerPick) {
+      initTimerPicker('.date-timer_timer-wrap', timer => {
+        getTimer(timer)
+      })
+      // 赋值到年月日输入框
+      dateInput.value = currentDateFormat
+    } else {
+      timerPick.setAttribute('style', 'display: block')
+    }
+  }
+
+  const calendarFooterCancel = document.querySelector('.calendar-footer_cancel')
+  const calendarFooterConfirm = document.querySelector('.calendar-footer_confirm')
+  calendarFooterCancel.onclick = () => {
+    cb(null)
+  }
+  calendarFooterConfirm.onclick = () => {
+    cb(`${currentDateFormat} ${currentTimeFormat}`)
+  }
 }
 
-function initDate(y, m, cb) {
+// 不足10的补一个零
+const filterDate = date => {
+  if (Number(date) < 10) {
+    return '0' + date
+  }
+  return date
+}
+
+function initDate(y, m, getDate) {
   // 设置当前年月对应的天数列表
   const getCurrentYearAndMonthDayList = (year, month) => {
     const getMonthDays = (tempYear, tempMonth) => {
@@ -79,12 +145,6 @@ function initDate(y, m, cb) {
     }
     return dayList
   }
-  const filterDate = (date) => {
-    if (Number(date) < 10) {
-      return '0' + date
-    }
-    return date
-  }
   let currentYearDiv = document.querySelector('.current-date_year')
   let currentMonthDiv = document.querySelector('.current-date_month')
   let currentYearValue = y
@@ -110,7 +170,7 @@ function initDate(y, m, cb) {
       dayLine.setAttribute('class', 'day-line')
       dayEle.appendChild(dayLine)
     }
-    let span = document.createElement('span')
+    const span = document.createElement('span')
     // 绑定点击事件
     span.onclick = () => {
       // 先让所有的active标签变成原始状态
@@ -120,11 +180,12 @@ function initDate(y, m, cb) {
       })
       if (!day.disable) {
         span.setAttribute('class', 'day-active')
-        let result = {
-          type: 'click',
-          value: [currentYearValue, filterDate(currentMonthValue), filterDate(day.value)]
-        }
-        cb(result)
+        let result = [
+          currentYearValue,
+          filterDate(currentMonthValue),
+          filterDate(day.value)
+        ]
+        getDate(result)
       }
     }
     if (day.disable) {
@@ -137,7 +198,7 @@ function initDate(y, m, cb) {
   })
 }
 
-function bindEvent(cb) {
+function bindYearAndMonthEvent(getDate) {
   // 四个按钮
   let prevYear = document.querySelector('.arrow-left_year')
   let prevMonth = document.querySelector('.arrow-left_month')
@@ -157,11 +218,11 @@ function bindEvent(cb) {
     } else {
       currentMonth--
     }
-    initDate(currentYear, currentMonth, cb)
+    initDate(currentYear, currentMonth, getDate)
   }
   nextYear.onclick = () => {
     currentYear++
-    initDate(currentYear, currentMonth, cb)
+    initDate(currentYear, currentMonth, getDate)
   }
   nextMonth.onclick = () => {
     if (currentMonth === 12) {
@@ -170,6 +231,75 @@ function bindEvent(cb) {
     } else {
       currentMonth++
     }
-    initDate(currentYear, currentMonth, cb)
+    initDate(currentYear, currentMonth, getDate)
+  }
+}
+
+function initTimerPicker(domName, getTimer) {
+  let timerPicker = `
+    <div class="timer-pick">
+      <div class="timer-pick_content"></div>
+      <div class="timer-pick_footer">
+        <button type="button" class="timer-pick_cancel">取消</button>
+        <button type="button" class="timer-pick_confirm primary-button">确定</button>
+      </div>
+    </div>
+  `
+  let timer = ['12', '00', '00']
+  timerPicker = timerPicker.replace(/\n/g, '')
+  let fatherDom = document.querySelector(domName)
+  fatherDom.innerHTML = timerPicker
+  initTimerPickDate(getTimer)
+
+  function initTimerPickDate(getTimer) {
+    let timerWrap = document.querySelector('.timer-pick_content')
+    let hourWrap = document.createElement('ul')
+    let minuteWrap = document.createElement('ul')
+    let secondWrap = document.createElement('ul')
+    for (let i = 0; i < 24; i++) {
+      let hour = document.createElement('li')
+      hour.innerText = i < 10 ? '0' + i : i
+      hourWrap.appendChild(hour)
+      hour.onclick = () => {
+        timer[0] = hour.innerText
+        getTimer(timer)
+      }
+    }
+    for (let i = 0; i < 60; i++) {
+      let minute = document.createElement('li')
+      minute.innerText = i < 10 ? '0' + i : i
+      minuteWrap.appendChild(minute)
+      minute.onclick = () => {
+        timer[1] = minute.innerText
+        getTimer(timer)
+      }
+    }
+    for (let i = 0; i < 60; i++) {
+      let second = document.createElement('li')
+      second.innerText = i < 10 ? '0' + i : i
+      secondWrap.appendChild(second)
+      second.onclick = () => {
+        timer[1] = second.innerText
+        getTimer(timer)
+      }
+    }
+    timerWrap.append(hourWrap)
+    timerWrap.append(minuteWrap)
+    timerWrap.append(secondWrap)
+  }
+
+  const cancel = document.querySelector('.timer-pick_cancel')
+  const confirm = document.querySelector('.timer-pick_confirm')
+  const timerPick = document.querySelector('.timer-pick')
+
+  cancel.onclick = () => {
+    timerPick.setAttribute('style', 'display: none')
+    timer = ['12', '00', '00']
+    getTimer(timer)
+  }
+
+  confirm.onclick = () => {
+    timerPick.setAttribute('style', 'display: none')
+    getTimer(timer)
   }
 }

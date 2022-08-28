@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./modal.css" />
     <link rel="stylesheet" href="./calendar.css">
     <link rel="stylesheet" href="./common.css">
+    <link rel="stylesheet" href="./pagination.css">
     <style>
       .head {
         padding: 0 10px;
@@ -41,15 +42,21 @@
         min-width: 100px;
       }
 
-      .table {
+      .table-wrap {
+        display: flex;
+        flex-direction: column;
+        width: 500px;
+      }
+
+      .table-wrap .table {
         margin-top: 10px;
         padding: 0 10px;
         border-collapse: collapse;
         border-spacing: 0;
       }
 
-      .table tr th,
-      .table tr td {
+      .table-wrap .table tr th,
+      .table-wrap .table tr td {
         min-width: 60px;
         border: 1px solid #ebeef5;
         text-align: left;
@@ -59,9 +66,14 @@
 
       .sum {
         display: flex;
-        padding: 0 10px;
-        width: 520px;
-        justify-content: space-between
+        justify-content: right;
+        margin-top: 10px
+      }
+
+      .table-wrap .pagination-wrap {
+        display: flex;
+        justify-content: right;
+        margin-top: 10px
       }
 
       .add-bill-time_date {
@@ -128,19 +140,23 @@
           <div class="overlay"></div>
         </div>
       </div>
-      <table class="table"></table>
-      <div class="pagination-wrap"></div>
-      <div class="sum"></div>
+      <div class="table-wrap">
+        <table class="table"></table>
+        <div class="sum"></div>
+        <div class="pagination-wrap"></div>
+      </div>
     </div>
     <script type="module">
       import { txtToJson, dispose, deepClone, generateTimerList, findParentNode } from './util.js'
       import { loadPickDate } from "./pickDate.js";
       import { loadTable } from "./table.js";
+      import { loadPagination } from "./pagination.js";
       let searchParams = {
         month: '',
         category: '',
         pageNum: 1,
-        pageSize: 10
+        pageSize: 10,
+        total: 0
       }
       // 处理数据
       let billData = txtToJson(billText)
@@ -188,12 +204,12 @@
           searchParams.category = selectedValue
         })
         bindEvent('.search-btn', 'onclick', () => {
-          handleSearch(searchParams)
+          updateList(searchParams)
         })
       }
       initSearch()
-      
-      function handleSearch(params) {
+
+      function updateList(params) {
         let tempData = deepClone(billData)
         tempData.data = billData.data.filter(item => {
           let timerMonth = new Date(Number(item.time)).toISOString().split('-')[1]
@@ -213,13 +229,22 @@
           return true
         })
         const totalPageNum = tempData.data.length / params.pageSize
-        const total = tempData.data.length
+        searchParams.total = tempData.data.length
         tempData.data = tempData.data.slice((params.pageNum - 1) * params.pageSize, params.pageSize * params.pageNum)
         tempData = dispose(tempData, categoriesData)
         tempData.data = tempData.data.sort((a, b) => a.amount - b.amount)
         loadTable('.table', tempData)
       }
-      handleSearch(searchParams)
+      updateList(searchParams)
+      // 在第一次更新表格后初始化分页
+      loadPagination('.pagination-wrap', searchParams.pageSize, searchParams.total, pageSize => {
+        searchParams.pageNum = 1
+        searchParams.pageSize = pageSize
+        updateList(searchParams)
+      }, pageNum => {
+        searchParams.pageNum = pageNum
+        updateList(searchParams)
+      })
       
       // 添加账单按钮触发事件
       bindEvent('.addBill', 'onclick', (e, ele) => {
@@ -264,7 +289,7 @@
             return
           }
           billData.data.push(formResult)
-          handleSearch(searchParams)
+          updateList(searchParams)
           closeModal()
         }
         const closeModal = () => {

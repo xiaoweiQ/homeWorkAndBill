@@ -12,14 +12,10 @@ export const loadTable = (domName, data) => {
   }
   function renderSum(tableData) {
     // 移除dom
-    let sumDiv = document.querySelector('.sum')
-    if (sumDiv) {
-      let parent = sumDiv.parentElement
-      parent.removeChild(sumDiv)
+    let sumDom = document.querySelector('.sum')
+    while (sumDom.hasChildNodes()) {
+      sumDom.removeChild(sumDom.firstChild)
     }
-    let wrap = document.querySelector('.wrap')
-    let newSumDiv = document.createElement('div')
-    newSumDiv.setAttribute('class', 'sum')
     // 设置收入金额dom
     let income = document.createElement('div')
     income.style.color = 'green'
@@ -27,26 +23,20 @@ export const loadTable = (domName, data) => {
     // 设置支持金额dom
     let spending = document.createElement('spending')
     spending.style.color = 'red'
+    spending.style.marginLeft = '20px'
     spending.innerText = '支出金额：' + getSum(0, tableData)
-    // 添加dom到根结点
-    wrap.appendChild(newSumDiv)
-    newSumDiv.appendChild(income)
-    newSumDiv.appendChild(spending)
+    sumDom.appendChild(income)
+    sumDom.appendChild(spending)
   }
-  // 移除旧的table
-  let table = document.querySelector(domName)
-  if (table) {
-    let parent = table.parentElement
-    parent.removeChild(table)
+  // 移除table里面所有的元素
+  let tableDom = document.querySelector(domName)
+  while (tableDom.hasChildNodes()) {
+    tableDom.removeChild(tableDom.firstChild)
   }
   // 生成新的table
-  let wrap = document.querySelector('.wrap')
-  let newTable = document.createElement('table')
-  newTable.setAttribute('class', 'table')
-  wrap.appendChild(newTable)
   const appendTitles = titles => {
     let tr = document.createElement('tr')
-    newTable.appendChild(tr)
+    tableDom.appendChild(tr)
     titles.forEach(title => {
       let th = document.createElement('th')
       tr.appendChild(th)
@@ -56,7 +46,7 @@ export const loadTable = (domName, data) => {
   const appendContents = contents => {
     contents.forEach(content => {
       let tr = document.createElement('tr')
-      newTable.appendChild(tr)
+      tableDom.appendChild(tr)
       for (const key in content) {
         let td = document.createElement('td')
         tr.appendChild(td)
